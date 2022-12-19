@@ -2,10 +2,9 @@ from random import randint, getrandbits
 from math import gcd
 import string
 
-alp = string.ascii_lowercase
+alphabet = string.ascii_lowercase
 
-
-def miller_rabin_test(n, k=10):
+def simple_test_miller_rabin_test(n, k=10):
     if (n == 2 or n == 3):
         return True, 1
 
@@ -41,60 +40,61 @@ def miller_rabin_test(n, k=10):
     return True, 1 - 1 / (4 ** k)
 
 
-def generate_prime_candidate(length):
-    p = getrandbits(length)
-    p |= (1 << length - 1) | 1
-    return p
+def create_candidate_prime(length):
+    prime = getrandbits(length)
+    prime |= (1 << length - 1) | 1
+    return prime
 
 
-def generate_prime_number(length=512):
-    p = 4
-    while not miller_rabin_test(p, 128)[0]:
-        p = generate_prime_candidate(length)
-    return p
+def create_number_prime(length=512):
+    prime = 4
+    while not simple_test_miller_rabin_test(prime, 128)[0]:
+        prime = create_candidate_prime(length)
+    return prime
 
 
-def generate_coprime_number(limit):
+def create_number_coprime(limit):
     while True:
-        num = randint(2, limit - 1)
-        if gcd(num, limit) == 1:
-            return num
+        number = randint(2, limit - 1)
+        if gcd(number, limit) == 1:
+            return number
 
 
-def generate_keys():
-    p, q = generate_prime_number(), generate_prime_number()
+def create_keys():
+    p, q = create_number_prime(), create_number_prime()
     n = p * q
-    eul = (p - 1) * (q - 1)
-    e = generate_coprime_number(eul)
-    d = pow(e, -1, eul)
+    euclid_number = (p - 1) * (q - 1)
+    euclid_search = create_number_coprime(euclid_number)
+    d = pow(euclid_search, -1, euclid_number)
 
-    public_key = {
-        "e": e,
+    key_public = {
+        "e": euclid_search,
         "n": n
     }
-    private_key = {
+    key_private = {
         "d": d,
         "n": n
     }
-    return public_key, private_key
+    return key_public, key_private
 
 
-def encode(message, public_key):
-    text_to_digits = [alp.index(ch) for ch in message.lower()]
-    encoded = [pow(num, public_key['e'], public_key['n']) for num in text_to_digits]
+def encode(message, key_public):
+    text_to_digit = [alphabet.index(char) for char in message.lower()]
+    encoded = [pow(number, key_public['e'], key_public['n']) for number in text_to_digit]
     return encoded
 
 
-def decode(encoded, private_key):
-    decoded_digits = [pow(num, private_key['d'], private_key['n']) for num in encoded]
-    decoded_message = ''.join(alp[ch] for ch in decoded_digits)
+def decode(encoded, key_private):
+    decoded_digits = [pow(number, key_private['d'], key_private['n']) for number in encoded]
+    decoded_message = ''.join(alphabet[char] for char in decoded_digits)
     return decoded_message
 
 
 if __name__ == '__main__':
-    text = "MikhailDubrovskyi"
-    public_key, private_key = generate_keys()
-    encoded_text = encode(text, public_key)
-    print(text)
-    print(f"Encoded text: {encoded_text}")
-    print(f"Decoded text: {decode(encoded_text, private_key)}")
+    text_source = "deniskhomey"
+    key_public, key_private = create_keys()
+    text_encoded = encode(text_source, key_public)
+    print(f"Заданий текст: {text_source}")
+    print("====================")
+    print(f"Зашифрований текст: {text_encoded}")
+    print(f"Розшифрований текст: {decode(text_encoded, key_private)}")
